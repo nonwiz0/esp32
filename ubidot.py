@@ -1,3 +1,4 @@
+#Chanbroset, Andreas, Bryan
 from umqtt.robust import MQTTClient
 import machine as m
 import ubinascii
@@ -43,7 +44,7 @@ def publish():
         msg = b'{"temp":%s, "hum":%s, "dht": {"context":{"hum": %s, "temp": %s}}}' % (temp, hum, hum, temp)
         print(msg)
         client.publish(b"/v1.6/devices/ESP32", msg)
-        time.sleep(5)
+        time.sleep(10)
 
 publish()
 

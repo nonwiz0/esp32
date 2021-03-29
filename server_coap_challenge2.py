@@ -25,10 +25,10 @@ _SERVER_PORT = 5683  # default CoAP port
 d = dht.DHT11(Pin(32, Pin.IN))
 led = Pin(2, Pin.OUT)
 
-def publish(temp, hum):
+def publish(node, temp, hum):
     ubi_client.connect()
     sleep(1)
-    msg = b'{"coap_temp":%s, "coap_hum":%s}' % (temp, hum)
+    msg = b'{"node:":%s, "coap_temp":%s, "coap_hum":%s}' % (node, temp, hum)
     print("Uploading", msg, "to ubidot")
     ubi_client.publish(b"/v1.6/devices/ESP32", msg)
     time.sleep(10)
@@ -66,7 +66,7 @@ def getDHT(packet, senderIp, senderPort):
         buzzer.on()
         sleep(1)
         buzzer.off()
-    publish(temp, hum)
+    publish(node_num, temp, hum)
     
     
 client = microcoapy.Coap()

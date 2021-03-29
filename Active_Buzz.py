@@ -2,10 +2,10 @@
 from machine import Pin
 from utime import sleep
 
-buzzer = Pin(32, Pin.OUT)
+buzzer = Pin(25, Pin.OUT)
 
 while True:
     buzzer.on()
-    sleep(1)
+    sleep(0.1)
     buzzer.off()
-    sleep(1)
+    sleep(0.1)

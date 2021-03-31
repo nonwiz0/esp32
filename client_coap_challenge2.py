@@ -1,18 +1,21 @@
-# Paula Andreas Broset
+# Paula Andreas Broset Bryan
 # COAP Challenge 2
 import network
 import machine
 import microcoapy
 from time import sleep
 from machine import Pin
+import dht
 
-btn = Pin(27, Pin.IN, Pin.PULL_UP)
+
 wlan = network.WLAN(network.STA_IF)
 wlan.active(True)
+d = dht.DHT11(Pin(27, Pin.IN))
+buzzer = Pin(25, Pin.OUT)
 
 _MY_SSID = 'AIU-WIFI'
 _MY_PASS = ''
-_SERVER_IP = '10.0.13.59'
+_SERVER_IP = '10.0.12.254'
 # I am connecting to Andreas Server node here, for now we jus wanna see can we turn on the led or not
 _SERVER_PORT = 5683  # default CoAP port
 _COAP_POST_URL = 'dht/getValue'
@@ -35,53 +38,12 @@ def connectToWiFi():
 
 def sendPostRequest(client, message):
      # About to post message...
-     
-    messageId = client.post(_SERVER_IP, _SERVER_PORT, _COAP_POST_URL, "test",
+    messageId = client.post(_SERVER_IP, _SERVER_PORT, _COAP_POST_URL, message,
                                     None, microcoapy.COAP_CONTENT_FORMAT.COAP_TEXT_PLAIN)
     print("[POST] Message Id: ", messageId)
-
      # wait for response to our request for 2 seconds
     client.poll(10000)
-
-# def sendPutRequest(client):
-#     # About to post message...
-#     messageId = client.put(_SERVER_IP, _SERVER_PORT, "led/turnOn", "test",
-#                                    "authorization=1234567",
-#                                    microcoapy.COAP_CONTENT_FORMAT.COAP_TEXT_PLAIN)
-#     print("[PUT] Message Id: ", messageId)
-#
-#     # wait for response to our request for 2 seconds
-#     client.poll(10000)
-
-def getDHT(packet, senderIp, senderPort):
-    d.measure()
-    temp = str(d.temperature()) + " deg celsius"
-    hum = str(d.humidity()) + "g.kg^-1"
-    message = temp + ", " + hum
-    client.sendResponse(senderIp, senderPort, packet.messageid, message, microcoapy.COAP_RESPONSE_CODE.COAP_CONTENT, microcoapy.COAP_CONTENT_FORMAT.COAP_NONE,
-                        
-def sendGetRequest(client):
-    # About to post message...
-    messageId = client.get(_SERVER_IP, _SERVER_PORT, _COAP_POST_URL)
-    print("[GET] Message Id: ", messageId, 'Sending URL...', _COAP_POST_URL)
-
-    # wait for response to our request for 2 seconds
-    if client.poll(10000):
-        print("Request received")
-    else:
-        print("no message received")
-
-    if client.poll(10000):
-        print("message received 2")
-    else:
-        print("no message received 2")
-
-    # if client.state == self.TRANSMISSION_STATE.STATE_SEPARATE_ACK_RECEIVED_WAITING_DATA:
-    #     client.state = self.TRANSMISSION_STATE.STATE_IDLE
-    #     client.sendResponse(_SERVER_IP, _SERVER_PORT, packet.messageid,
-    #                     None, macros.COAP_TYPE.COAP_ACK,
-    #                     macros.COAP_CONTENT_FORMAT.COAP_NONE, packet.token)
-
+    
 def receivedMessageCallback(packet, sender):
     print('Message received:', packet.toString(), ', from: ', sender)
     
@@ -102,8 +64,18 @@ client.start()
 
 
 while True:
-    sleep(1)
-    sendPostRequest(client)
+    # Checking the temperature
+    d.measure()
+    temp = d.temperature()
+    humi = d.humidity()
+    message = "Node{} Nn Temp: {} Celcius Tn Humidity: {} Humid".format(1, temp, humi)
+    print("Sending {} to the Coap_Server".format(message))
+    if temp > 27:
+        buzzer.on()
+        sleep(1)
+        buzzer.off()
+    sleep(.5)
+    sendPostRequest(client, message)
    
     
 # stop CoAP

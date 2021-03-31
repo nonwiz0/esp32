@@ -22,8 +22,7 @@ buzzer = Pin(25, Pin.OUT)
 _MY_SSID = 'AIU-WIFI'
 _MY_PASS = ''
 _SERVER_PORT = 5683  # default CoAP port
-d = dht.DHT11(Pin(32, Pin.IN))
-led = Pin(2, Pin.OUT)
+
 
 def publish(node, temp, hum):
     ubi_client.connect()
@@ -53,7 +52,6 @@ def connectToWiFi():
 connectToWiFi()
 
  
-
 def getDHT(packet, senderIp, senderPort):
     print('DHT request received:', packet.toString(), ', from: ', senderIp, ":", senderPort)
     print("packet payload: {}".format(packet.payload))

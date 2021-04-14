@@ -2,7 +2,6 @@
 from umqtt.robust import MQTTClient
 import machine as m
 import ubinascii
-import dht
 from machine import Pin
 from time import sleep
 import time
@@ -65,6 +64,7 @@ def getDHT(packet, senderIp, senderPort):
         sleep(1)
         buzzer.off()
     publish(node_num, temp, hum)
+    sleep(0.5)
     
     
 client = microcoapy.Coap()

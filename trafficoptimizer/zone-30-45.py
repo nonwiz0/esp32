@@ -23,7 +23,7 @@ current_time = 0
 last_message = 0
 message_interval = 1
 counter = 0
-zones = ["Z00", "Z15"]
+zones = ["Z30", "Z45"]
 
 station = network.WLAN(network.STA_IF)
 
@@ -45,21 +45,21 @@ def sub_cb(topic, msg):
     print((topic, msg))
     green_light = msg.decode("utf-8")
     green_light = green_light.split("|")
-    found_z00 = green_light[0].find(zones[0], 0)
-    found_z15 = green_light[0].find(zones[1], 0)
-    # print("Z00 finding:", found_z00, "Z15 finding: ", found_z15)
-    is_z00_green_light = found_z00 > 0
-    is_z15_green_light = found_z15 > 0
-    if is_z00_green_light:
-        remaining = green_light[0][found_z00 + 3: green_light[0].find(' sec')]
-        print("Z00 Green Light is on", remaining)
+    found_z30 = green_light[0].find(zones[0], 0)
+    found_z45 = green_light[0].find(zones[1], 0)
+    # print("Z30 finding:", found_z30, "Z45 finding: ", found_z45)
+    is_z30_green_light = found_z30 > 0
+    is_z45_green_light = found_z45 > 0
+    if is_z30_green_light:
+        remaining = green_light[0][found_z30 + 3: green_light[0].find(' sec')]
+        print("Z30 Green Light is on", remaining)
     else:
-        print("Z00 is Red Light")
-    if is_z15_green_light:
-        remaining = green_light[0][found_z15 + 3: green_light[0].find(' sec')]
-        print("Z15 Green Light is on", remaining)
+        print("Z30 is Red Light")
+    if is_z45_green_light:
+        remaining = green_light[0][found_z45 + 3: green_light[0].find(' sec')]
+        print("Z45 Green Light is on", remaining)
     else:
-        print("Z15 is Red Light")
+        print("Z45 is Red Light")
     if topic == b'notification' and msg == b'received':
         print('ESP received hello message')
 
@@ -87,10 +87,9 @@ while True:
         client.check_msg()
         if (time.time() - last_message) > message_interval:
             msg = "#{}".format(counter)
-            msg = b'Z00: V1 L0 | Z15: V0 LF'
+            msg = b'Z30: V1 L0 | Z45: V0 LF'
             client.publish(topic_pub, msg)
             last_message = time.time()
             counter += 1
     except OSError as e:
         restart_and_reconnect()
-

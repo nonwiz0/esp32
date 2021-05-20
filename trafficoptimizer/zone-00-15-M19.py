@@ -8,6 +8,9 @@ import esp
 esp.osdebug(None)
 import gc
 import random
+from main_RGB_LED import RGBLed
+from hcsr04 import HCSR04
+
 gc.collect()
 
 ssid = 'ELIJAH-WIFI'
@@ -25,8 +28,20 @@ message_interval = 1
 counter = 0
 zones = ["Z00", "Z15"]
 
-station = network.WLAN(network.STA_IF)
 
+# Red is 26, Green is 25, Blue is 27
+tl_z00 = RGBLed(25, 26, 27)
+tl_z15 = RGBLed(18, 19, 21)
+
+def switch_light(led, color):
+    if color == 'red':
+        led.set(255, 0, 0)
+    elif color == 'yellow':
+        led.set(255, 255, 0)
+    elif color == 'green':
+        led.set(0, 255, 0)
+
+station = network.WLAN(network.STA_IF)
 station.active(True)
 station.connect(ssid, password)
 
@@ -42,26 +57,35 @@ print(station.ifconfig())
 ######################################
 
 def sub_cb(topic, msg):
-    print((topic, msg))
+    #print((topic, msg))
     green_light = msg.decode("utf-8")
     green_light = green_light.split("|")
     found_z00 = green_light[0].find(zones[0], 0)
     found_z15 = green_light[0].find(zones[1], 0)
-    # print("Z00 finding:", found_z00, "Z15 finding: ", found_z15)
     is_z00_green_light = found_z00 > 0
     is_z15_green_light = found_z15 > 0
     if is_z00_green_light:
-        remaining = green_light[0][found_z00 + 3: green_light[0].find(' sec')]
-        print("Z00 Green Light is on", remaining)
+        remaining = green_light[0][found_z00 + 5: green_light[0].find(' sec')]
+        if int(remaining) < 5:
+            switch_light(tl_z00, 'yellow')
+        else:
+            switch_light(tl_z00, 'green')
+            print("Z00 Green Light is on", remaining)
     else:
+        switch_light(tl_z00, 'red')
         print("Z00 is Red Light")
+        
     if is_z15_green_light:
-        remaining = green_light[0][found_z15 + 3: green_light[0].find(' sec')]
+        #print(is_z15_green_light, green_light[0], green_light[0][found_z15])
+        remaining = green_light[0][found_z15 + 5: green_light[0].find(' sec')]
+        if int(remaining) < 5:
+            switch_light(tl_z15, 'yellow')
+        else:
+            switch_light(tl_z15, 'green')
         print("Z15 Green Light is on", remaining)
     else:
         print("Z15 is Red Light")
-    if topic == b'notification' and msg == b'received':
-        print('ESP received hello message')
+        switch_light(tl_z15, 'red')
 
 def connect_and_subscribe():
     global client_id, mqtt_server, topic_sub
@@ -86,11 +110,20 @@ while True:
     try:
         client.check_msg()
         if (time.time() - last_message) > message_interval:
+            s_z00 = HCSR04(trigger_pin=13, echo_pin=12)
             msg = "#{}".format(counter)
-            msg = b'Z00: V1 L0 | Z15: V0 LF'
+            get_z00_dist = s_z00.distance_cm()
+            has_vehicle = get_z00_dist < 10
+            if has_vehicle:
+              has_vehicle = 1
+            else:
+              has_vehicle = 0
+            msg = 'Z00: V{} L0 | Z15: V1 LF'.format(has_vehicle)
+            msg = msg.encode()
             client.publish(topic_pub, msg)
             last_message = time.time()
             counter += 1
     except OSError as e:
         restart_and_reconnect()
+
 
